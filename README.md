@@ -33,6 +33,14 @@ pip install -e .
 
 Restart InvenTree server + worker after install.
 
+### Install Directly From GitHub Tag
+
+```bash
+pip install -U "https://github.com/Gray-Stone/devterm-thermal-inventree-plugin/archive/refs/tags/v0.2.5.tar.gz"
+```
+
+For a specific python environment, run it with that environment's `pip`.
+
 ## InvenTree Setup
 
 1. Open InvenTree admin plugin settings.

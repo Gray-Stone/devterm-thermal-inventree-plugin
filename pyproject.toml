@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "inventree-devterm-cups-plugin"
+description = "InvenTree label printer plugin which sends PDF labels to a CUPS queue"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+  {name = "Gray Stone"}
+]
+version = "0.2.5"
+dependencies = [
+  "pyipp==0.17.2",
+  "pypdf>=4.0.0,<6.0.0"
+]
+
+[project.entry-points."inventree_plugins"]
+InvenTreeDevtermCupsPlugin = "inventree_printer_plugin:InvenTreeDevtermCupsPlugin"

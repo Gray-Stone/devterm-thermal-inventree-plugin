@@ -14,7 +14,7 @@ No bridge scripts, no extra HTTP service.
 - Applies job attributes:
   - from configurable `JOB_OPTIONS` (key=value list)
   - `copies`
-  - optional `media` (`blank` / `auto` / explicit value)
+  - optional `label_size` (`blank` / `auto` / `30x20` / `30*20` / `Custom.30x20mm`)
 - Also sends queue controls:
   - `FeedWhere` / `FeedDist` from feed setting
 
@@ -36,7 +36,7 @@ Restart InvenTree server + worker after install.
 ### Install Directly From GitHub Tag
 
 ```bash
-pip install -U "https://github.com/Gray-Stone/devterm-thermal-inventree-plugin/archive/refs/tags/v0.2.5.tar.gz"
+pip install -U "https://github.com/Gray-Stone/devterm-thermal-inventree-plugin/archive/refs/tags/v0.2.8.tar.gz"
 ```
 
 For a specific python environment, run it with that environment's `pip`.
@@ -49,10 +49,12 @@ For a specific python environment, run it with that environment's `pip`.
 - `CUPS_HOST` (default `portterm`)
 - `CUPS_QUEUE` (default `devterm_printer`)
 - `CUPS_PORT` (default `631`)
-- `DEFAULT_MEDIA`
+- `Default Label Size` (`DEFAULT_MEDIA`)
   - blank: do not send `media` (queue default is used)
-  - `auto`: derive `media=Custom.WxHmm` from first PDF page size (via `pypdf`; regex fallback)
-  - explicit: e.g. `Custom.48x30mm`
+  - `auto`: keep the original PDF size and send matching `media=Custom.WxHmm`
+  - explicit target size: `30x20`, `30*20`, `30x20mm`, or `Custom.30x20mm`
+  - when an explicit size differs from the PDF, the plugin rescales and centers the label into the target page while preserving aspect ratio
+  - if the requested height is smaller than the queue's minimum custom page height, the plugin uses the smallest safe media height and fits within the requested size
 - `DEFAULT_FEED_AFTER_MM` (default `0`, range `0..45`)
 - `JOB_OPTIONS` (one `key=value` per line, or comma-separated)
   - default:
@@ -67,6 +69,7 @@ Then print labels from normal InvenTree label actions.
 
 - This plugin uses IPP directly (no system print command dependency).
 - This plugin uses the filtered queue on `portterm`; no raw ESC/POS encoding is needed in plugin code.
+- `label_size` is the user-facing print option. The plugin still accepts legacy `media` input as an alias.
 - Feed behavior:
   - `feed_after_mm=0` => no extra post-job feed
   - `feed_after_mm>0` => mapped to nearest PPD `FeedDist` 3mm step and `FeedWhere=AfterJob`

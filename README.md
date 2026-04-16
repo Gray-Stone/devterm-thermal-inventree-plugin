@@ -36,7 +36,7 @@ Restart InvenTree server + worker after install.
 ### Install Directly From GitHub Tag
 
 ```bash
-pip install -U "https://github.com/Gray-Stone/devterm-thermal-inventree-plugin/archive/refs/tags/v0.2.8.tar.gz"
+pip install -U "https://github.com/Gray-Stone/devterm-thermal-inventree-plugin/archive/refs/tags/v0.2.9.tar.gz"
 ```
 
 For a specific python environment, run it with that environment's `pip`.
@@ -73,4 +73,5 @@ Then print labels from normal InvenTree label actions.
 - Feed behavior:
   - `feed_after_mm=0` => no extra post-job feed
   - `feed_after_mm>0` => mapped to nearest PPD `FeedDist` 3mm step and `FeedWhere=AfterJob`
+- Copies are submitted as separate one-copy IPP jobs so feed is applied between physical labels.
 - `orientation-requested=none` means plugin will not send orientation override.

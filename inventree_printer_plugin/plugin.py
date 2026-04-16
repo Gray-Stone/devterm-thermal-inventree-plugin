@@ -44,7 +44,7 @@ class InvenTreeDevtermCupsPlugin(LabelPrintingMixin, SettingsMixin, InvenTreePlu
     TITLE = "DevTerm CUPS Label Printer"
     DESCRIPTION = "Send generated InvenTree PDF labels to CUPS queue on portterm via IPP"
     AUTHOR = "Gray Stone"
-    VERSION = "0.2.8"
+    VERSION = "0.2.9"
     logger = logging.getLogger("inventree.devterm_cups_label_printer")
 
     BLOCKING_PRINT = True
@@ -363,25 +363,32 @@ class InvenTreeDevtermCupsPlugin(LabelPrintingMixin, SettingsMixin, InvenTreePlu
     ) -> None:
         uri = self._printer_uri(host, port, queue)
         payload_to_print, media_resolved = self._resolve_label_output(label_size, payload)
-        job_attrs = {
-            "job-name": title,
-            "copies": copies,
-        }
-        job_attrs.update(self._parse_job_options(job_options_text))
-        job_attrs.update(self._feed_options(feed_after_mm))
+        copy_count = max(1, int(copies))
+        common_job_attrs = self._parse_job_options(job_options_text)
+        common_job_attrs.update(self._feed_options(feed_after_mm))
         if media_resolved:
-            job_attrs["media"] = media_resolved
+            common_job_attrs["media"] = media_resolved
 
-        message = {
-            "operation-attributes-tag": {
-                "document-format": "application/pdf",
-            },
-            "job-attributes-tag": job_attrs,
-            "data": payload_to_print,
-        }
-
+        # The DevTerm CUPS filter applies FeedWhere=AfterJob after CUPS has
+        # handled the copies attribute. Submit physical copies as distinct jobs
+        # so the feed happens between labels instead of being batched at the end.
         async with IPP(uri) as ipp:
-            await ipp.execute(IppOperation.PRINT_JOB, message)
+            for copy_index in range(copy_count):
+                job_attrs = {
+                    "job-name": title
+                    if copy_count == 1
+                    else f"{title} ({copy_index + 1}/{copy_count})",
+                    "copies": 1,
+                }
+                job_attrs.update(common_job_attrs)
+                message = {
+                    "operation-attributes-tag": {
+                        "document-format": "application/pdf",
+                    },
+                    "job-attributes-tag": job_attrs,
+                    "data": payload_to_print,
+                }
+                await ipp.execute(IppOperation.PRINT_JOB, message)
 
     def print_label(self, **kwargs):
         label = (
@@ -397,7 +404,7 @@ class InvenTreeDevtermCupsPlugin(LabelPrintingMixin, SettingsMixin, InvenTreePlu
             or options.get("media")
             or self.get_setting("DEFAULT_MEDIA")
         )
-        copies = int(options.get("copies", 1))
+        copies = max(1, int(options.get("copies", 1)))
         title = options.get("title") or "inventree-label"
         feed_after_mm = float(
             options.get("feed_after_mm", self.get_setting("DEFAULT_FEED_AFTER_MM") or 0)
